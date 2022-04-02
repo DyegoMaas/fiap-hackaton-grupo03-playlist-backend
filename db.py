@@ -7,19 +7,20 @@ db_password = os.environ.get('CLOUD_SQL_PASSWORD')
 db_name = os.environ.get('CLOUD_SQL_DATABASE_NAME')
 db_local_host = os.environ.get('DB_LOCAL_HOST')
 db_connection_name = os.environ.get('CLOUD_SQL_CONNECTION_NAME')
+db_port = os.environ.get('DB_PORT')
 
 def open_connection():
     try:
         if db_connection_name:
             unix_socket = '/cloudsql/{}'.format(db_connection_name)
             conn = pymysql.connect(user=db_user, password=db_password,
-                                unix_socket=unix_socket, db=db_name,
+                                unix_socket=unix_socket, db=db_name, port=db_port,
                                 cursorclass=pymysql.cursors.DictCursor
                                 )
             print ('tchau')
         else:
             print ('oi')
-            conn = pymysql.connect(user=db_user, password=db_password,
+            conn = pymysql.connect(user=db_user, password=db_password, port=db_port,
                                 host=db_local_host, db=db_name,cursorclass=pymysql.cursors.DictCursor)
 
         return conn
