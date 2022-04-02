@@ -1,0 +1,81 @@
+name: DevOpsLab Pipeline
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  UnitTest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install Requirements
+        run: pip install --trusted-host pypi.python.org -r ./requirements.txt 
+
+      # - name: Unit Test
+      #   run: python -m unittest -v test
+
+  # SonarCloud:
+  #     name: SonarCloud
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - uses: actions/checkout@v2
+  #         with:
+  #           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+  #       - name: SonarCloud Scan
+  #         uses: SonarSource/sonarcloud-github-action@master
+  #         env:
+  #           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+  #           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  
+  Build:
+    needs: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        depth: 0
+
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v1
+        id: buildx
+        with:
+          install: true
+    
+      - name: Build Docker
+        run: |
+          docker build . -t playlist-backend:latest
+
+      # - name: Promote Docker image
+      #   uses: timperman/artifactory-promote-action@v1
+      #   with:
+      #     url: ${{ secrets.ARTIFACTORY_HOST }}
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #     sourceRepo: docker-dev
+      #     targetRepo: docker-prod
+      #     dockerRepository: myorg/myrepository
+      #     tag: ${{ github.sha }}
+      #     targetTag: v1.0.0
+      #     copy: 'true'
+
+  # Deploy:
+  #   needs: Build
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Deploy Heroku
+  #       env:
+  #         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+  #       run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web
